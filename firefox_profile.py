@@ -6,7 +6,7 @@ from functools import lru_cache
 import lz4.block
 
 
-__version__ = "0.0.0"
+__version__ = "0.0.1"
 
 
 class FirefoxTab:

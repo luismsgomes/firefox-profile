@@ -9,7 +9,7 @@ def read(relpath):
 
 setup(
     name="firefox-profile",
-    version="0.0.0",
+    version="0.0.1",
     description="Utility to access Firefox profile data.",
     long_description=read("README.md"),
     url="https://github.com/luismsgomes/firefox-profile",
