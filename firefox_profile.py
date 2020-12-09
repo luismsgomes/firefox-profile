@@ -1,6 +1,8 @@
-from datetime import datetime
-import os
 import json
+import os
+import sys
+
+from datetime import datetime
 from functools import lru_cache
 
 import lz4.block
@@ -89,6 +91,9 @@ class FirefoxProfile:
         self.hash = hash
         self.path = path
 
+    def to_json(self):
+        return dict(name=self.name, hash=self.hash, path=self.path)
+
     @property
     def recovery_file_path(self):
         return os.path.join(self.path, "sessionstore-backups", "recovery.jsonlz4")
@@ -109,19 +114,35 @@ class FirefoxProfile:
         return f"profile {self.name}"
 
     @staticmethod
-    def get_profiles(firefox_dir=None):
-        if firefox_dir is None:
-            firefox_dir = os.path.expanduser("~/.mozilla/firefox")
-        with os.scandir(firefox_dir) as entries:
+    def get_profiles(profiles_dir=None):
+        if profiles_dir is None:
+            profiles_dir = FirefoxProfile.get_profiles_dir()
+        with os.scandir(profiles_dir) as entries:
             for entry in entries:
-                if not entry.name.startswith(".") and entry.is_dir():
+                if (
+                    entry.is_dir()
+                    and not entry.name.startswith(".")
+                    and "." in entry.name
+                    and os.path.isfile(
+                        os.path.join(profiles_dir, entry.name, "times.json")
+                    )
+                ):
                     profile_hash, _, profile_name = entry.name.partition(".")
                     if not profile_name:
                         continue
-                    profile_path = os.path.join(firefox_dir, entry.name)
+                    profile_path = os.path.join(profiles_dir, entry.name)
                     yield FirefoxProfile(
                         name=profile_name, hash=profile_hash, path=profile_path
                     )
+
+    @staticmethod
+    def get_profiles_dir():
+        if sys.platform.startswith("win"):
+            return os.path.expandvars("%APPDATA%\\Mozilla\\Firefox\\Profiles")
+        if sys.platform.startswith("darwin"):
+            return os.path.expanduser("~/Library/Application Support/Firefox/Profiles")
+        return os.path.expanduser("~/.mozilla/firefox")
+
 
 def main():
     json_data = []
@@ -129,10 +150,12 @@ def main():
         recovery_data = profile.get_recovery_data()
         if recovery_data is None:
             continue
-        json_data.append(dict(
-            profile=profile.name,
-            windows=[window.to_json() for window in recovery_data.windows]
-        ))
+        json_data.append(
+            dict(
+                profile=profile.to_json(),
+                windows=[window.to_json() for window in recovery_data.windows],
+            )
+        )
 
     print(json.dumps(json_data, indent=4))
 
