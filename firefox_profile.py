@@ -109,14 +109,16 @@ class FirefoxProfile:
         return f"profile {self.name}"
 
     @staticmethod
-    def get_profiles(firefoxdir=os.path.expanduser("~/.mozilla/firefox")):
-        with os.scandir(firefoxdir) as entries:
+    def get_profiles(firefox_dir=None):
+        if firefox_dir is None:
+            firefox_dir = os.path.expanduser("~/.mozilla/firefox")
+        with os.scandir(firefox_dir) as entries:
             for entry in entries:
                 if not entry.name.startswith(".") and entry.is_dir():
                     profile_hash, _, profile_name = entry.name.partition(".")
                     if not profile_name:
                         continue
-                    profile_path = os.path.join(firefoxdir, entry.name)
+                    profile_path = os.path.join(firefox_dir, entry.name)
                     yield FirefoxProfile(
                         name=profile_name, hash=profile_hash, path=profile_path
                     )
