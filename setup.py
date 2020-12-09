@@ -12,6 +12,7 @@ setup(
     version="0.0.1",
     description="Utility to access Firefox profile data.",
     long_description=read("README.md"),
+    long_description_content_type="text/markdown",
     url="https://github.com/luismsgomes/firefox-profile",
     author="Luís Gomes",
     author_email="luismsgomes@gmail.com",
